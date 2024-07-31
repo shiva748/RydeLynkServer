@@ -1,0 +1,25 @@
+# Dependency directories
+node_modules/
+
+# Environment variables file (if using .env)
+.env
+
+# Logs
+logs/
+*.log
+
+# Build files (if using a build tool like webpack or babel)
+dist/
+build/
+
+# Editor/IDE specific files
+.vscode/
+.idea/
+drivesync-e96f8-firebase-adminsdk-lf8c0-f99ffe7fe3.json
+
+# # OS generated files
+# .DS_Store
+# Thumbs.db
+
+# Miscellaneous
+npm-debug.log*
