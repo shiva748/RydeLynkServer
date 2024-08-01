@@ -1140,7 +1140,7 @@ exports.registerOperator = async (req, res) => {
       throw error;
     }
   } catch (error) {
-    res.status(res.status || 500).json({
+    res.status(error.status || 500).json({
       success: false,
       message: error.message || "Internal Server Error",
     });
