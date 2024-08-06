@@ -35,6 +35,17 @@ const userSchema = new Schema({
     trim: true,
     match: /^\S+@\S+\.\S+$/,
   },
+  Score: {
+    completed: {
+      type: Number,
+    },
+    cancelled:{
+      type:Number,
+    },
+    bookings: {
+      type: Number,
+    },
+  },
   Operator: {
     OperatorId: {
       type: String,

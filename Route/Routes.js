@@ -51,6 +51,9 @@ const {
   callOperator,
   genratelotp,
   verifyloginOTP,
+  getDriverPR,
+  review_driver,
+  getScore,
 } = require("../Controller/controller");
 const path = require("path");
 const fs = require("fs");
@@ -174,5 +177,11 @@ Router.post("/Driver/booking/end", verifyToken, endTrip);
 Router.get("/Driver/reject-request", verifyToken, rejectdriverrequest);
 
 Router.post("/Operator/booking/call-operator", verifyToken, callOperator);
+
+Router.post("/Driver/profile/review", verifyToken, getDriverPR);
+
+Router.post("/Driver/profile/post/review", verifyToken, review_driver);
+
+Router.post("/user/booking/score", verifyToken, getScore);
 
 module.exports = Router;

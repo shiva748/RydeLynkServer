@@ -2624,6 +2624,16 @@ exports.acceptOffer = async (req, res) => {
       }
     }
     let result = await Booking.updateOne({ BookingId: BookingId }, update);
+    await User.updateOne(
+      { UserId: user.UserId },
+      {
+        Score: {
+          bookings: user.Score.bookings ? user.Score.bookings + 1 : 1,
+          completed: user.Score.completed ? user.Score.completed : 0,
+          cancelled: user.Score.cancelRequest ? Score.cancelRequest : 0,
+        },
+      }
+    );
     res.status(200).json({
       success: true,
       message: "Offer accepted successfully",
@@ -2641,7 +2651,7 @@ exports.acceptOffer = async (req, res) => {
                 bid.Offer
               }`,
             });
-          } catch (error) {}
+          } catch (eracceptOfferror) {}
         }
       });
       if (oup.Driver.DriverId != driver.DriverId) {
@@ -2907,7 +2917,16 @@ exports.cancelBooking = async (req, res) => {
       booking.Reasons = Reasons;
       await booking.save();
     }
-
+    await User.updateOne(
+      { UserId: user.UserId },
+      {
+        Score: {
+          bookings: user.Score.bookings,
+          cancelled: user.Score.cancelled ? user.Score.cancelled + 1 : 1,
+          completed: user.Score.completed,
+        },
+      }
+    );
     res.status(200).json({
       success: true,
       message: "Booking cancelled successfully",
@@ -3221,6 +3240,12 @@ exports.endTrip = async (req, res) => {
     booking.Status = "completed";
     booking.Billing.EndTime = new Date();
     await booking.save();
+    let client = await User.findOne({ UserId: booking.UserId });
+    client.Score = {
+      ...client.Score,
+      completed: client.Score.completed ? client.Score.completed + 1 : 1,
+    };
+    await client.save();
     res.status(200).json({ success: true, message: "Trip ended" });
     try {
       let message = `${user.Name.split(" ")[0]} has ended the trip.`;
@@ -3330,6 +3355,165 @@ exports.callOperator = async (req, res) => {
   }
 };
 
+exports.review_driver = async (req, res) => {
+  try {
+    let user = req.user;
+    let { DriverId, rating, comment } = req.body;
+    ["DriverId", "rating", "comment"].forEach((itm) => {
+      if (!req.body[itm]) {
+        handleError(`Please provide ${itm}`, 400);
+      }
+    });
+    if (!Number.isInteger(rating) || rating <= 0) {
+      handleError("Please give a valid rating.", 400);
+    }
+    if (comment.trim() === "") {
+      handleError("Review cannot be empty.", 400);
+    }
+
+    if (comment.length > 300) {
+      handleError("Review cannot exceed 300 characters.", 400);
+    }
+    const numbersOnly = comment.replace(/[^0-9]/g, "");
+
+    if (numbersOnly.length >= 10) {
+      const phoneNumberPattern = /^(\d{10,})$/;
+      if (phoneNumberPattern.test(numbersOnly)) {
+        handleError("Please do not share phone numbers in the review.", 400);
+      }
+    }
+    let driver = await Driver.findOne({
+      DriverId,
+      Status: { $ne: "unlinked" },
+    });
+
+    if (!driver) {
+      handleError("No active driver found to review", 400);
+    } else if (user.UserId == driver.UserId) {
+      handleError("Can't post review for yourself", 400);
+    }
+
+    let rat = await Rating.findOne({ UserId: driver.UserId });
+
+    if (!rat) {
+      rat = new Rating({
+        UserId: driver.UserId,
+        Reviews: [],
+        OverallRating: 0,
+      });
+    }
+
+    let index = rat.Reviews.findIndex((itm) => itm.UserId == user.UserId);
+
+    if (index > -1) {
+      rat.Reviews[index] = {
+        UserId: user.UserId,
+        DriverId,
+        rating,
+        comment,
+        Name: user.Name,
+      };
+    } else {
+      rat.Reviews.push({
+        UserId: user.UserId,
+        DriverId,
+        rating,
+        comment,
+        Name: user.Name,
+      });
+    }
+
+    const totalRating = rat.Reviews.reduce(
+      (sum, review) => sum + review.rating,
+      0
+    );
+    rat.OverallRating = totalRating / rat.Reviews.length;
+
+    await rat.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Review submitted successfully",
+      rating: rat,
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
+// === === === driver profile with review === === === //
+
+exports.getDriverPR = async (req, res) => {
+  try {
+    let { DriverId } = req.body;
+    let driver = await Driver.findOne({ DriverId });
+    if (!driver) {
+      handleError("No driver profile found", 404);
+    }
+    let rat = await Rating.findOne({ UserId: driver.UserId });
+    if (!rat) {
+      rat = {
+        UserId: driver.UserId,
+        Reviews: [],
+        OverallRating: 0,
+      };
+    }
+    return res.status(200).json({
+      success: true,
+      data: {
+        UserId: driver.UserId,
+        Name: driver.Name,
+        Profile: driver.Profile,
+        Rating: rat,
+      },
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
+// === === === get score === === === //
+
+exports.getScore = async (req, res) => {
+  try {
+    let { BookingId } = req.body;
+    if (!BookingId) {
+      handleError("Please specify BookingId to know score", 400);
+    }
+    let booking = await Booking.findOne({ BookingId });
+    if (!booking) {
+      handleError("Please enter a valid BookingId", 400);
+    } else if (booking.Status != "pending") {
+      handleError("Invalid Request", 400);
+    }
+    let user = await User.findOne({ UserId: booking.UserId });
+    res.status(200).json({
+      success: true,
+      data:
+        user.Score.bookings === 0
+          ? "No bookings yet."
+          : `${user.Score.completed} out of ${
+              user.Score.bookings
+            } bookings were completed${
+              user.Score.completed < user.Score.bookings * 0.6
+                ? " - Consider the completion rate before bidding."
+                : ""
+            }`,
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
 // === ==== === ==== Admin Controllers === === === //
 
 const handleError = (message, status) => {
@@ -3339,6 +3523,7 @@ const handleError = (message, status) => {
 };
 
 const Admin = require("../Database/collection/admin");
+const Rating = require("../Database/collection/Rating");
 
 exports.a_Login = async (req, res) => {
   try {
