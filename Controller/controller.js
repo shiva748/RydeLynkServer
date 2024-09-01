@@ -3484,28 +3484,49 @@ exports.getScore = async (req, res) => {
   try {
     let { BookingId } = req.body;
     if (!BookingId) {
-      handleError("Please specify BookingId to know score", 400);
+      return handleError("Please specify BookingId to know score", 400, res);
     }
     let booking = await Booking.findOne({ BookingId });
     if (!booking) {
-      handleError("Please enter a valid BookingId", 400);
-    } else if (booking.Status != "pending") {
-      handleError("Invalid Request", 400);
+      return handleError("Please enter a valid BookingId", 400, res);
+    } else if (booking.Status !== "pending") {
+      return handleError("Invalid Request", 400, res);
     }
+
     let user = await User.findOne({ UserId: booking.UserId });
-    console.log(user);
+    if (!user) {
+      return handleError("User not found", 404, res);
+    }
+
+    // Ensure user.Score is defined
+    const { Score } = user;
+    if (
+      !Score ||
+      typeof Score.completed !== "number" ||
+      typeof Score.bookings !== "number"
+    ) {
+      return res.status(200).json({
+        success: true,
+        data: "No bookings yet.",
+      });
+    }
+
+    const completed = Score.completed || 0;
+    const bookings = Score.bookings || 0;
+
+    // Calculate message
+    const message =
+      bookings === 0
+        ? "No bookings yet."
+        : `${completed} out of ${bookings} bookings were completed${
+            completed < bookings * 0.6
+              ? " - Consider the completion rate before bidding."
+              : ""
+          }`;
+
     res.status(200).json({
       success: true,
-      data:
-        !user.Score || user.Score.bookings === 0
-          ? "No bookings yet."
-          : `${user.Score.completed} out of ${
-              user.Score.bookings
-            } bookings were completed${
-              user.Score.completed < user.Score.bookings * 0.6
-                ? " - Consider the completion rate before bidding."
-                : ""
-            }`,
+      data: message,
     });
   } catch (error) {
     res.status(error.status || 500).json({
