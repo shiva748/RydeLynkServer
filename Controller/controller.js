@@ -3493,6 +3493,7 @@ exports.getScore = async (req, res) => {
       handleError("Invalid Request", 400);
     }
     let user = await User.findOne({ UserId: booking.UserId });
+    console.log(user);
     res.status(200).json({
       success: true,
       data:
