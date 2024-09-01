@@ -3496,7 +3496,7 @@ exports.getScore = async (req, res) => {
     res.status(200).json({
       success: true,
       data:
-        user.Score.bookings === 0
+        !user.Score || user.Score.bookings === 0
           ? "No bookings yet."
           : `${user.Score.completed} out of ${
               user.Score.bookings
