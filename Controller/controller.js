@@ -2215,6 +2215,11 @@ exports.postOffer = async (req, res) => {
       error.status = 400;
       throw error;
     }
+    if (Offer > 5.5 * booking.Offer) {
+      let error = new Error(`you can't bid more then ₹${5.5 * booking.Offer}`);
+      error.status = 400;
+      throw error;
+    }
     if (!remove) {
       cab = await Cab.findOne({
         CabId,
