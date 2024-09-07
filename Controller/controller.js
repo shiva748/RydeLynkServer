@@ -2423,10 +2423,10 @@ exports.getWallet = async (req, res) => {
 
 exports.createOrder = async (req, res) => {
   try {
-    // return res.status(400).json({
-    //   success: false,
-    //   message: "Wallet top-ups are paused. All features are free to use.",
-    // });
+    return res.status(400).json({
+      success: false,
+      message: "Wallet top-ups are paused. All features are free to use.",
+    });
     const user = req.user;
     if (
       !user ||
@@ -2473,10 +2473,10 @@ exports.createOrder = async (req, res) => {
 
 exports.verifypayment = async (req, res) => {
   try {
-    // return res.status(400).json({
-    //   success: false,
-    //   message: "Wallet top-ups are paused. All features are free to use.",
-    // });
+    return res.status(400).json({
+      success: false,
+      message: "Wallet top-ups are paused. All features are free to use.",
+    });
     let user = req.user;
     let {
       razorpay_order_id,
@@ -2511,10 +2511,10 @@ exports.verifypayment = async (req, res) => {
 // === === === payment failed === === === //
 exports.failedpayment = async (req, res) => {
   try {
-    // return res.status(400).json({
-    //   success: false,
-    //   message: "Wallet top-ups are paused. All features are free to use.",
-    // });
+    return res.status(400).json({
+      success: false,
+      message: "Wallet top-ups are paused. All features are free to use.",
+    });
     let { orderId, operatorId } = req.body;
     let failed = await paymentDismiss(operatorId, orderId);
     res.status(200).json(failed);
