@@ -3970,7 +3970,13 @@ exports.a_approveDriver = async (req, res) => {
     if (profile.Status !== "pending") {
       handleError("Can't be approved at this stage", 400);
     }
-
+    if (profile.UserId.split("-")[1] == profile.OperatorId.split("-")[1]) {
+      profile.Status = "verified";
+      await User.updateOne(
+        { UserId: profile.UserId },
+        { Driver: { Status: "verified", DriverId: profile.DriverId } }
+      );
+    }
     profile.Status = "approved";
     await profile.save();
     return res.status(200).json({
