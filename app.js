@@ -3,7 +3,7 @@ require("dotenv").config();
 
 const express = require("express");
 const { createServer } = require("node:http");
-const port = 3006 || process.env.PORT;
+const port = 3005 || process.env.PORT;
 const Routes = require("./Route/Routes");
 const Adminroutes = require("./Route/adminroute");
 const bodyParser = require("body-parser");
