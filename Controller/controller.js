@@ -1612,7 +1612,6 @@ exports.Activate = async (req, res) => {
       .status(201)
       .json({ success: true, message: "Profile activation was successful" });
   } catch (error) {
-    console.log(error);
     res.status(error.status || 500).json({
       success: false,
       message: error.message || "Internal Server Error",
@@ -1630,10 +1629,15 @@ const { sendNotification } = require("./fcm");
 exports.RegisterCab = async (req, res) => {
   try {
     const user = req.user;
-    if (!user.Operator || !user.Operator.verified) {
+    if (!user.Operator) {
       return res
         .status(401)
         .json({ success: false, message: "unauthorized access" });
+    } else if (!user.Operator.verified) {
+      return res.status(401).json({
+        success: false,
+        message: "You can add a cab once you are verified.",
+      });
     }
     const { fields, files } = await busboyPromise(req);
     let { Model, CabNumber } = fields;
@@ -1929,13 +1933,12 @@ exports.getDuty = async (req, res) => {
   try {
     let user = req.user;
     let { From, To, date } = req.body;
-
-    if (!From) {
-      return res.status(400).json({
-        success: false,
-        message: "From location is required",
-      });
-    }
+    // if (!From) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "From location is required",
+    //   });
+    // }
 
     [From, To].forEach((itm) => {
       if (itm) {
@@ -1946,8 +1949,9 @@ exports.getDuty = async (req, res) => {
         }
       }
     });
-
-    From = await getLatLong(From.description);
+    if (From) {
+      From = await getLatLong(From.description);
+    }
     if (To) {
       To = await getLatLong(To.description);
     }
@@ -1955,45 +1959,56 @@ exports.getDuty = async (req, res) => {
     const fromLocation = From ? From.location : null;
     const toLocation = To ? To.location : null;
 
-    if (!fromLocation && !toLocation) {
-      return res.status(400).json({
-        success: false,
-        message: "Either from or to location must be provided",
-      });
-    }
+    // if (!fromLocation && !toLocation) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Either from or to location must be provided",
+    //   });
+    // }
 
     const currentDate = new Date();
 
-    const locationQuery = {
-      $or: [
-        fromLocation && toLocation
-          ? {
-              $and: [
-                {
-                  "From.location": {
-                    $geoWithin: {
-                      $centerSphere: [fromLocation.coordinates, 50 / 6371], // 50 km radius
+    let locationQuery = {};
+    if (fromLocation || toLocation) {
+      locationQuery = {
+        $or: [
+          fromLocation && toLocation
+            ? {
+                $and: [
+                  {
+                    "From.location": {
+                      $geoWithin: {
+                        $centerSphere: [fromLocation.coordinates, 50 / 6371], // 50 km radius
+                      },
                     },
                   },
-                },
-                {
-                  "To.location": {
-                    $geoWithin: {
-                      $centerSphere: [toLocation.coordinates, 50 / 6371], // 50 km radius
+                  {
+                    "To.location": {
+                      $geoWithin: {
+                        $centerSphere: [toLocation.coordinates, 50 / 6371], // 50 km radius
+                      },
                     },
                   },
+                ],
+              }
+            : fromLocation
+            ? {
+                "From.location": {
+                  $geoWithin: {
+                    $centerSphere: [fromLocation.coordinates, 50 / 6371], // 50 km radius
+                  },
                 },
-              ],
-            }
-          : {
-              "From.location": {
-                $geoWithin: {
-                  $centerSphere: [fromLocation.coordinates, 50 / 6371], // 50 km radius
+              }
+            : {
+                "To.location": {
+                  $geoWithin: {
+                    $centerSphere: [toLocation.coordinates, 50 / 6371], // 50 km radius
+                  },
                 },
               },
-            },
-      ],
-    };
+        ],
+      };
+    }
 
     const dateQuery = date
       ? {
@@ -2410,6 +2425,13 @@ exports.getWallet = async (req, res) => {
       error.status = 400;
       throw error;
     }
+    let pending = wallet.Transactions.filter((itm) => itm.status == "pending");
+    if (pending.length) {
+      pending.forEach(async (itm) => {
+        await paymentDismiss(user.Operator.OperatorId, itm.orderId);
+      });
+      wallet = await Wallet.findOne({ OperatorId: user.Operator.OperatorId });
+    }
     res.status(200).json({ success: true, data: wallet });
   } catch (error) {
     res.status(error.status || 500).json({
@@ -2674,9 +2696,7 @@ exports.acceptOffer = async (req, res) => {
           }
         });
       }
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   } catch (error) {
     res.status(error.status || 500).json({
       success: false,
@@ -2731,6 +2751,62 @@ exports.rejectOffer = async (req, res) => {
       success: false,
       message: error.message || "Internal Server Error",
     });
+  }
+};
+// === === === share booking === === === //
+
+exports.share = async (req, res) => {
+  try {
+    const { BookingId } = req.params;
+
+    if (!BookingId) {
+      return res.status(404).json({ message: "Booking ID is required." });
+    }
+
+    // Fetch booking details from the database
+    const booking = await Booking.findOne({ BookingId });
+
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ message: "No booking found with the provided ID." });
+    }
+
+    // Construct response object without contact details
+    const response = {
+      BookingId: booking.BookingId,
+      Name: booking.Name,
+      From: booking.From,
+      To: booking.To,
+      Status: booking.Status,
+      Date: booking.Date,
+      ReturnDate: booking.ReturnDate,
+      Category: booking.Category,
+      TripType: booking.TripType,
+      Offer: booking.Offer,
+      Hour: booking.Hour,
+      Km: booking.Km,
+      Reasons: booking.Reasons,
+      Operator: booking.Operator,
+      Bids: booking.Bids.map((bid) => ({
+        OperatorId: bid.OperatorId,
+        Offer: bid.Offer,
+        CabId: bid.CabId,
+        DriverId: bid.DriverId,
+        Model: bid.Model,
+        Name: bid.Name,
+        Manufacturer: bid.Manufacturer,
+        rejected: bid.rejected,
+      })),
+      PublishOn: booking.PublishOn,
+    };
+
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ message: "An error occurred while fetching booking details." });
   }
 };
 
@@ -3731,11 +3807,11 @@ exports.a_verifyOperator = async (req, res) => {
       handleError("No Operator Registration found", 404);
     }
 
-    if (profile.Status !== "pending") {
+    if (profile.Status !== "pending" && profile.Status != "verified") {
       handleError("Can't be verified at this stage", 400);
     }
 
-    profile.Status = "verified";
+    profile.Status = "active";
     profile.verified = true;
     await profile.save();
     await User.updateOne(
@@ -3743,11 +3819,12 @@ exports.a_verifyOperator = async (req, res) => {
       {
         Operator: {
           verified: true,
-          Status: "verified",
+          Status: "active",
           OperatorId: profile.OperatorId,
         },
       }
     );
+    initializeWallet(profile.OperatorId);
     return res.status(200).json({
       success: true,
       message: "Operator verified successfully",
@@ -3976,8 +4053,9 @@ exports.a_approveDriver = async (req, res) => {
         { UserId: profile.UserId },
         { Driver: { Status: "verified", DriverId: profile.DriverId } }
       );
+    } else {
+      profile.Status = "approved";
     }
-    profile.Status = "approved";
     await profile.save();
     return res.status(200).json({
       success: true,

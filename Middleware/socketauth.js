@@ -58,7 +58,7 @@ const partnervalidate = async (socket, next) => {
       socket.user = { success: false };
       return next();
     }
-    if (!user.Operator.verified) {
+    if (!user.Operator) {
       socket.user = { success: false };
       return next();
     }

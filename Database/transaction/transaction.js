@@ -15,7 +15,7 @@ exports.initializeWallet = async (OperatorId) => {
     );
 
     if (existingWallet) {
-      throw new Error("Wallet already exists for this operator");
+      return;
     }
 
     const newWallet = new Wallet({

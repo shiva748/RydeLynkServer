@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Booking Details</title>
+
+    <!-- Google Fonts for better typography -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Styles -->
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f7f8fc;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        overflow: hidden;
+        margin: 0;
+      }
+
+      .loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+
+      .loading-screen.hidden {
+        display: none;
+      }
+
+      .container {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 1200px;
+        height: 90%;
+        max-height: 800px; /* Adjust as needed */
+        margin: 0 auto;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .header {
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 28px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .playstore-link {
+        display: flex;
+        align-items: center;
+      }
+
+      .playstore-link img {
+        width: 150px; /* Adjust size as needed */
+        height: auto;
+        cursor: pointer;
+        transition: opacity 0.3s ease;
+      }
+
+      .playstore-link img:hover {
+        opacity: 0.8;
+      }
+
+      .section {
+        margin-bottom: 30px;
+      }
+
+      .section h2 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 10px;
+      }
+
+      .section p {
+        font-size: 16px;
+        font-weight: 400;
+        color: #777;
+        margin-bottom: 10px;
+      }
+
+      .section .detail-label {
+        color: #333;
+        font-weight: 500;
+      }
+
+      .table-container {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+
+      table th,
+      table td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: left;
+      }
+
+      table th {
+        background-color: #f4f4f4;
+        color: #333;
+      }
+
+      table td {
+        color: #666;
+      }
+
+      .btn {
+        display: block;
+        background-color: #1eb980;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 16px;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+        box-shadow: 0 4px 10px rgba(30, 185, 128, 0.4);
+        margin-top: 20px;
+      }
+
+      .btn:hover {
+        background-color: #15956a;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+          margin: 10px;
+        }
+
+        .header h1 {
+          font-size: 24px;
+        }
+
+        .section h2,
+        .section p {
+          font-size: 14px;
+        }
+
+        .btn {
+          font-size: 14px;
+          padding: 12px;
+        }
+
+        .playstore-link img {
+          width: 120px; /* Adjust size for smaller screens */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loading-screen" id="loadingScreen">
+      <div>Loading...</div>
+    </div>
+
+    <div class="container">
+      <div class="header-container">
+        <div class="header">
+          <h1>Booking Details</h1>
+        </div>
+        <div class="playstore-link">
+          <a
+            href="https://play.google.com/store/apps/details?id=com.RydeLynk.app"
+            target="_blank"
+          >
+            <img src="/assets/img/Android.png" alt="Get it on Google Play" />
+          </a>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>
+          <span class="detail-label">From: </span
+          ><span id="from-location"></span>
+        </h2>
+        <h2>
+          <span class="detail-label">To: </span><span id="to-location"></span>
+        </h2>
+        <p>
+          <span class="detail-label">Date: </span><span id="trip-date"></span>
+        </p>
+        <p>
+          <span class="detail-label">Offer: </span>₹
+          <span id="offer-amount"></span>
+        </p>
+        <p>
+          <span class="detail-label">Status: </span><span id="status"></span>
+        </p>
+        <p>
+          <span class="detail-label">Trip Type: </span
+          ><span id="trip-type"></span>
+        </p>
+        <p>
+          <span class="detail-label">Category: </span
+          ><span id="category"></span>
+        </p>
+      </div>
+
+      <div class="section">
+        <h2>Bids</h2>
+        <div class="table-container">
+          <table id="bids-table">
+            <thead>
+              <tr>
+                <th>Operator</th>
+                <th>Offer</th>
+                <th>Cab</th>
+                <th>Manufacturer</th>
+              </tr>
+            </thead>
+            <tbody id="bids-body">
+              <!-- Bids will be injected here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <a href="#" id="google-maps-link" class="btn" target="_blank"
+        >View Route on Google Maps</a
+      >
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const bookingId = window.location.pathname.split("/").pop();
+        const loadingScreen = document.getElementById("loadingScreen");
+        const bidsTableBody = document.getElementById("bids-body");
+        const googleMapsLink = document.getElementById("google-maps-link");
+
+        loadingScreen.classList.remove("hidden");
+
+        try {
+          const response = await fetch(`/api/booking/${bookingId}`);
+          const booking = await response.json();
+          const fromLocation = `${booking.From.description}`;
+          const toLocation = booking.To ? `${booking.To.description}` : "N/A";
+          const tripDate = new Date(booking.Date).toLocaleString("en-IN", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            second: undefined,
+          });
+          const offerAmount = booking.Offer;
+          const status = booking.Status;
+          const tripType = booking.TripType;
+          const category = booking.Category;
+
+          document.getElementById("from-location").textContent = fromLocation;
+          document.getElementById("to-location").textContent = toLocation;
+          document.getElementById("trip-date").textContent = tripDate;
+          document.getElementById("offer-amount").textContent = offerAmount;
+          document.getElementById("status").textContent = status;
+          document.getElementById("trip-type").textContent = tripType;
+          document.getElementById("category").textContent = category;
+
+          booking.Bids.forEach((bid) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                        <td>${bid.OperatorId}</td>
+                        <td>${bid.Offer}</td>
+                        <td>${bid.Model}</td>
+                        <td>${bid.Manufacturer}</td>
+                    `;
+            bidsTableBody.appendChild(row);
+          });
+
+          if (booking.From && booking.To) {
+            const fromCoords = booking.From.location.coordinates;
+            const toCoords = booking.To.location.coordinates;
+            googleMapsLink.href = `https://www.google.com/maps/dir/?api=1&origin=${fromCoords[1]},${fromCoords[0]}&destination=${toCoords[1]},${toCoords[0]}&travelmode=driving`;
+          } else {
+            googleMapsLink.style.display = "none";
+          }
+        } catch (err) {
+          console.error("Error fetching booking details", err);
+          document.querySelector(".container").innerHTML =
+            "<h2>Unable to fetch booking details. Please try again later.</h2>";
+        } finally {
+          loadingScreen.classList.add("hidden");
+        }
+      });
+    </script>
+  </body>
+</html>

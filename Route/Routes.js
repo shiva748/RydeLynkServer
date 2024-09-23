@@ -54,6 +54,7 @@ const {
   getDriverPR,
   review_driver,
   getScore,
+  share,
 } = require("../Controller/controller");
 const path = require("path");
 const fs = require("fs");
@@ -183,5 +184,7 @@ Router.post("/Driver/profile/review", verifyToken, getDriverPR);
 Router.post("/Driver/profile/post/review", verifyToken, review_driver);
 
 Router.post("/user/booking/score", verifyToken, getScore);
+
+Router.get("/booking/:BookingId", share);
 
 module.exports = Router;

@@ -3,7 +3,7 @@ require("dotenv").config();
 
 const express = require("express");
 const { createServer } = require("node:http");
-const port = 3005 || process.env.PORT;
+const port = 3006 || process.env.PORT;
 const Routes = require("./Route/Routes");
 const Adminroutes = require("./Route/adminroute");
 const bodyParser = require("body-parser");
@@ -33,6 +33,18 @@ app.get("/:file", (req, res) => {
   try {
     const { file } = req.params;
     let filePath = path.join(__dirname, `./landing/${file}.html`);
+    if (!fs.existsSync(filePath)) {
+      filePath = path.join(__dirname, `./landing/404.html`);
+    }
+    return res.status(200).sendFile(filePath);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+app.get("/booking/:BookingId", (req, res) => {
+  try {
+    let filePath = path.join(__dirname, `./landing/booking.html`);
     if (!fs.existsSync(filePath)) {
       filePath = path.join(__dirname, `./landing/404.html`);
     }
