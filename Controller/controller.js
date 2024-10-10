@@ -21,13 +21,13 @@ exports.login = async (req, res) => {
     const { PhoneNo, Password } = req.body;
     let filter = {};
     if (!PhoneNo) {
-      const error = new Error("PhoneNo is required");
+      const error = new Error("Phone number is required");
       error.status = 400;
       throw error;
     }
     if (PhoneNo) {
       if (!validator.isMobilePhone(PhoneNo, "en-IN")) {
-        const error = new Error("Invalid Credentials");
+        const error = new Error("Please enter a valid phone number.");
         error.status = 400;
         throw error;
       }
@@ -35,13 +35,14 @@ exports.login = async (req, res) => {
     }
 
     if (!validator.isLength(Password, { min: 8, max: 50 })) {
-      const error = new Error("Invalid Credentials");
+      const error = new Error("Please enter a valid Password");
       error.status = 400;
       throw error;
     }
     const user = await User.findOne(filter);
     if (!user) {
-      const error = new Error("Invalid Credentials");
+      const error = new Error("No account found. Please register.");
+      error.redirect = true;
       error.status = 400;
       throw error;
     }
@@ -64,14 +65,17 @@ exports.login = async (req, res) => {
         },
       });
     } else {
-      const error = new Error("Invalid Credentials");
+      const error = new Error("Please enter a valid password");
       error.status = 400;
       throw error;
     }
   } catch (error) {
     res
       .status(error.status || 500)
-      .json({ message: error.message || "Internal Server Error" });
+      .json({
+        message: error.message || "Internal Server Error",
+        redirect: error.redirect,
+      });
   }
 };
 
@@ -1012,40 +1016,42 @@ exports.registerOperator = async (req, res) => {
       error.status = 400;
       throw error;
     }
-    const requiredFields = [
-      {
-        key: "Name",
-        validator: (value) => validator.isLength(value, { min: 3, max: 20 }),
-        message: "Name must be 3 to 20 characters long",
-      },
-      {
-        key: "Dob",
-        validator: (value) => !!value,
-        message: "Please enter your date of birth",
-      },
-      {
-        key: "AadhaarNumber",
-        validator: (value) => validator.isLength(value, { min: 12, max: 12 }),
-        message: "Aadhaar number must be exactly 12 digits long",
-      },
-      {
-        key: "EmergencyNumber",
-        validator: (value) => validator.isMobilePhone(value, "en-IN"),
-        message: "Please enter a valid Indian mobile number",
-      },
-    ];
-    requiredFields.forEach(({ key, validator, message }) => {
-      if (!fields[key]) {
-        let error = new Error(`Please enter your ${key}`);
-        error.status = 400;
-        return error;
-      }
-      if (validator && !validator(fields[key])) {
-        let error = new Error(`${message}`);
-        error.status = 400;
-        throw error;
-      }
-    });
+    if (!fields.Name || fields.Name.trim() === "") {
+      let error = new Error("Please enter your Name");
+      error.status = 400;
+      throw error;
+    } else if (!validator.isLength(fields.Name, { min: 3, max: 20 })) {
+      let error = new Error("Name must be 3 to 20 characters long");
+      error.status = 400;
+      throw error;
+    }
+    
+    if (!fields.Dob || fields.Dob.trim() === "") {
+      let error = new Error("Please enter your date of birth");
+      error.status = 400;
+      throw error;
+    }
+    
+    if (!fields.AadhaarNumber || fields.AadhaarNumber.trim() === "") {
+      let error = new Error("Please enter your Aadhaar number");
+      error.status = 400;
+      throw error;
+    } else if (!validator.isLength(fields.AadhaarNumber, { min: 12, max: 12 })) {
+      let error = new Error("Aadhaar number must be exactly 12 digits long");
+      error.status = 400;
+      throw error;
+    }
+    
+    if (!fields.EmergencyNumber || fields.EmergencyNumber.trim() === "") {
+      let error = new Error("Please enter your Emergency number");
+      error.status = 400;
+      throw error;
+    } else if (!validator.isMobilePhone(fields.EmergencyNumber, "en-IN")) {
+      let error = new Error("Please enter a valid Indian mobile number");
+      error.status = 400;
+      throw error;
+    }
+    
     const dobPattern = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
     if (!dobPattern.test(fields.Dob)) {
       let error = new Error("Dob must be in format DD/MM/YYYY.");
