@@ -70,12 +70,10 @@ exports.login = async (req, res) => {
       throw error;
     }
   } catch (error) {
-    res
-      .status(error.status || 500)
-      .json({
-        message: error.message || "Internal Server Error",
-        redirect: error.redirect,
-      });
+    res.status(error.status || 500).json({
+      message: error.message || "Internal Server Error",
+      redirect: error.redirect,
+    });
   }
 };
 
@@ -1025,23 +1023,25 @@ exports.registerOperator = async (req, res) => {
       error.status = 400;
       throw error;
     }
-    
+
     if (!fields.Dob || fields.Dob.trim() === "") {
       let error = new Error("Please enter your date of birth");
       error.status = 400;
       throw error;
     }
-    
+
     if (!fields.AadhaarNumber || fields.AadhaarNumber.trim() === "") {
       let error = new Error("Please enter your Aadhaar number");
       error.status = 400;
       throw error;
-    } else if (!validator.isLength(fields.AadhaarNumber, { min: 12, max: 12 })) {
+    } else if (
+      !validator.isLength(fields.AadhaarNumber, { min: 12, max: 12 })
+    ) {
       let error = new Error("Aadhaar number must be exactly 12 digits long");
       error.status = 400;
       throw error;
     }
-    
+
     if (!fields.EmergencyNumber || fields.EmergencyNumber.trim() === "") {
       let error = new Error("Please enter your Emergency number");
       error.status = 400;
@@ -1051,7 +1051,7 @@ exports.registerOperator = async (req, res) => {
       error.status = 400;
       throw error;
     }
-    
+
     const dobPattern = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
     if (!dobPattern.test(fields.Dob)) {
       let error = new Error("Dob must be in format DD/MM/YYYY.");
@@ -1204,10 +1204,15 @@ exports.OperatorImage = async (req, res) => {
 exports.SearchDriver = async (req, res) => {
   try {
     let user = req.user;
-    if (!user.Operator || !user.Operator.verified) {
+    if (!user.Operator) {
       return res
         .status(401)
         .json({ success: false, message: "unauthorized access" });
+    } else if (!user.Operator.verified) {
+      return res.status(401).json({
+        success: false,
+        message: "कृपया इंतजार करें, हम आपके प्रोफाइल को वेरिफाई कर रहे हैं।",
+      });
     }
     let { EmailId, PhoneNo } = req.body;
     if (!EmailId || !PhoneNo) {
@@ -1283,10 +1288,15 @@ const isValidFutureDate = (dateString) => {
 exports.RegisterDriver = async (req, res) => {
   try {
     const user = req.user;
-    if (!user.Operator || !user.Operator.verified) {
+    if (!user.Operator) {
       return res
         .status(401)
         .json({ success: false, message: "unauthorized access" });
+    } else if (!user.Operator.verified) {
+      return res.status(401).json({
+        success: false,
+        message: "कृपया इंतजार करें, हम आपके प्रोफाइल को वेरिफाई कर रहे हैं।",
+      });
     }
     const { fields, files } = await busboyPromise(req);
     let {
@@ -2425,19 +2435,22 @@ exports.getWallet = async (req, res) => {
         message: "Unauthorized access: Operator verification required.",
       });
     }
+
     let wallet = await Wallet.findOne({ OperatorId: user.Operator.OperatorId });
     if (!wallet) {
       let error = new Error("No Wallet found");
       error.status = 400;
       throw error;
     }
-    let pending = wallet.Transactions.filter((itm) => itm.status == "pending");
-    if (pending.length) {
-      pending.forEach(async (itm) => {
-        await paymentDismiss(user.Operator.OperatorId, itm.orderId);
-      });
-      wallet = await Wallet.findOne({ OperatorId: user.Operator.OperatorId });
+
+    let pending = wallet.Transactions.filter((itm) => itm.status === "pending");
+    // Process each paymentDismiss sequentially
+    for (const itm of pending) {
+      await paymentDismiss(user.Operator.OperatorId, itm.orderId);
     }
+
+    // Reload wallet after processing
+    wallet = await Wallet.findOne({ OperatorId: user.Operator.OperatorId });
     res.status(200).json({ success: true, data: wallet });
   } catch (error) {
     res.status(error.status || 500).json({
@@ -3594,7 +3607,7 @@ exports.getScore = async (req, res) => {
     ) {
       return res.status(200).json({
         success: true,
-        data: "No bookings yet.",
+        data: "First Booking.",
       });
     }
 

@@ -165,7 +165,6 @@ exports.paymentDismiss = async (operatorId, orderId) => {
       throw new Error("Unauthorized access");
     }
     let odr = await razorpay.orders.fetchPayments(order.orderId);
-    console.log(odr);
     if (
       odr.items.some(
         (itm) => itm.status == "captured" && itm.order_id == order.orderId
@@ -183,7 +182,7 @@ exports.paymentDismiss = async (operatorId, orderId) => {
       await wallet.save({ session });
       await session.commitTransaction();
       session.endSession();
-      return { success: true, message: "Payment failed and wallet updated" };
+      return { success: true, message: "Payment captured and wallet updated" };
     } else {
       order.status = "failed";
       wallet.Transactions = wallet.Transactions.map((itm) => {
