@@ -9,18 +9,28 @@ const Adminroutes = require("./Route/adminroute");
 const bodyParser = require("body-parser");
 const initialize = require("./socket/socket");
 const path = require("node:path");
+const vhost = require('vhost');
 const app = express();
 const fs = require("fs");
 const cookieparser = require("cookie-parser");
 
 require("./Database/connection");
 
-app.use(bodyParser.json());
-app.use(cookieparser());
+// Create separate apps for main and admin
+const mainApp = express();
+const adminApp = express();
 
-app.use("/assets", express.static(path.join(__dirname, "./landing/assets")));
+// Configure admin app
+adminApp.use(bodyParser.json());
+adminApp.use(cookieparser());
+adminApp.use("/", Adminroutes);
 
-app.get("/", (req, res) => {
+// Configure main app
+mainApp.use(bodyParser.json());
+mainApp.use(cookieparser());
+mainApp.use("/assets", express.static(path.join(__dirname, "./landing/assets")));
+
+mainApp.get("/", (req, res) => {
   try {
     let filePath = path.join(__dirname, `./landing/index.html`);
     return res.status(200).sendFile(filePath);
@@ -29,7 +39,7 @@ app.get("/", (req, res) => {
   }
 });
 
-app.get("/:file", (req, res) => {
+mainApp.get("/:file", (req, res) => {
   try {
     const { file } = req.params;
     let filePath = path.join(__dirname, `./landing/${file}.html`);
@@ -42,7 +52,7 @@ app.get("/:file", (req, res) => {
   }
 });
 
-app.get("/booking/:BookingId", (req, res) => {
+mainApp.get("/booking/:BookingId", (req, res) => {
   try {
     let filePath = path.join(__dirname, `./landing/booking.html`);
     if (!fs.existsSync(filePath)) {
@@ -54,14 +64,16 @@ app.get("/booking/:BookingId", (req, res) => {
   }
 });
 
-app.use("/api", Routes);
+mainApp.use("/api", Routes);
 
-app.use("/admin", Adminroutes);
+// Use vhost to handle subdomains
+app.use(vhost('admin.localhost', adminApp));
+app.use(vhost('localhost', mainApp));
 
 const server = createServer(app);
 
 initialize(server);
 
 server.listen(port, () => {
-  console.log(`listining to port ${port}`);
+  console.log(`Server listening on port ${port}`);
 });

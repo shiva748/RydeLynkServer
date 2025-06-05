@@ -27,7 +27,7 @@ const userSchema = new Schema({
     required: true,
     trim: true,
     unique: true,
-  }, 
+  },
   EmailId: {
     type: String,
     required: true,
@@ -39,8 +39,8 @@ const userSchema = new Schema({
     completed: {
       type: Number,
     },
-    cancelled:{
-      type:Number,
+    cancelled: {
+      type: Number,
     },
     bookings: {
       type: Number,

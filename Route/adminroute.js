@@ -1,5 +1,6 @@
 const express = require("express");
 const Router = express.Router();
+const path = require("path")
 const {
   citysearch,
   a_Login,
@@ -17,7 +18,7 @@ const {
   a_activateDriver,
   a_SearchCab,
   getCabmedia,
-  a_approveCab,
+  a_getDuty,
   a_verifyCab,
   a_suspendCab,
   a_SearchUser,
@@ -28,6 +29,8 @@ const {
 } = require("../Controller/controller");
 const verifyToken = require("../Middleware/adminauth");
 // === === === login === === === //
+
+Router.use(express.static(path.join(__dirname, "../../rydelynk/build")))
 
 Router.post("/login", a_Login);
 
@@ -74,5 +77,7 @@ Router.post("/cab/delete", verifyToken, a_deleteCab);
 Router.post("/user/search", verifyToken, a_SearchUser);
 
 Router.get("/user/media/:UserId/:File", verifyToken, getUsermedia);
+
+Router.post("/booking/search", verifyToken, a_getDuty);
 
 module.exports = Router;

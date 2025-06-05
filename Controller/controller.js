@@ -1494,10 +1494,10 @@ exports.RegisterDriver = async (req, res) => {
               title: "Driver Request",
               body: `${user.Name.split(" ")[0]} want's to add you as driver`,
             });
-          } catch (error) {}
+          } catch (error) { }
         }
       });
-    } catch (error) {}
+    } catch (error) { }
   } catch (error) {
     res.status(error.status || 500).json({
       success: false,
@@ -1525,17 +1525,16 @@ exports.rejectdriverrequest = async (req, res) => {
         try {
           sendNotification(itm.fcm, {
             title: "Request Rejected",
-            body: `${
-              user.Name.split(" ")[0]
-            } has rejected the request to be your driver`,
+            body: `${user.Name.split(" ")[0]
+              } has rejected the request to be your driver`,
           });
-        } catch (error) {}
+        } catch (error) { }
       }
     });
     let folder = path.join(__dirname, "../files/driver/", profile.DriverId);
     try {
       await cleanupFiles(folder);
-    } catch (error) {}
+    } catch (error) { }
   } catch (error) {
     res.status(400).json({
       success: false,
@@ -1602,8 +1601,8 @@ exports.Activate = async (req, res) => {
         !driver && !cab
           ? "Please add a cab and driver"
           : !cab
-          ? "Please add a cab"
-          : "Please add a driver"
+            ? "Please add a cab"
+            : "Please add a driver"
       );
       error.status = 400;
       throw error;
@@ -1949,12 +1948,6 @@ exports.getDuty = async (req, res) => {
   try {
     let user = req.user;
     let { From, To, date } = req.body;
-    // if (!From) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "From location is required",
-    //   });
-    // }
 
     [From, To].forEach((itm) => {
       if (itm) {
@@ -1975,13 +1968,6 @@ exports.getDuty = async (req, res) => {
     const fromLocation = From ? From.location : null;
     const toLocation = To ? To.location : null;
 
-    // if (!fromLocation && !toLocation) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Either from or to location must be provided",
-    //   });
-    // }
-
     const currentDate = new Date();
 
     let locationQuery = {};
@@ -1990,32 +1976,32 @@ exports.getDuty = async (req, res) => {
         $or: [
           fromLocation && toLocation
             ? {
-                $and: [
-                  {
-                    "From.location": {
-                      $geoWithin: {
-                        $centerSphere: [fromLocation.coordinates, 50 / 6371], // 50 km radius
-                      },
+              $and: [
+                {
+                  "From.location": {
+                    $geoWithin: {
+                      $centerSphere: [fromLocation.coordinates, 50 / 6371], // 50 km radius
                     },
                   },
-                  {
-                    "To.location": {
-                      $geoWithin: {
-                        $centerSphere: [toLocation.coordinates, 50 / 6371], // 50 km radius
-                      },
+                },
+                {
+                  "To.location": {
+                    $geoWithin: {
+                      $centerSphere: [toLocation.coordinates, 50 / 6371], // 50 km radius
                     },
                   },
-                ],
-              }
+                },
+              ],
+            }
             : fromLocation
-            ? {
+              ? {
                 "From.location": {
                   $geoWithin: {
                     $centerSphere: [fromLocation.coordinates, 50 / 6371], // 50 km radius
                   },
                 },
               }
-            : {
+              : {
                 "To.location": {
                   $geoWithin: {
                     $centerSphere: [toLocation.coordinates, 50 / 6371], // 50 km radius
@@ -2028,11 +2014,11 @@ exports.getDuty = async (req, res) => {
 
     const dateQuery = date
       ? {
-          Date: {
-            $gte: new Date(new Date(date).setHours(0, 0, 0, 0)),
-            $lte: new Date(new Date(date).setHours(23, 59, 59, 999)),
-          },
-        }
+        Date: {
+          $gte: new Date(new Date(date).setHours(0, 0, 0, 0)),
+          $lte: new Date(new Date(date).setHours(23, 59, 59, 999)),
+        },
+      }
       : {};
 
     const query = {
@@ -2338,7 +2324,7 @@ exports.postOffer = async (req, res) => {
             title: "New Offer",
             body: `${driver.Name} is offering ₹${Offer} for your ${booking.TripType} request`,
           });
-        } catch (error) {}
+        } catch (error) { }
       });
     }
     res.status(200).json({
@@ -2538,7 +2524,7 @@ exports.verifypayment = async (req, res) => {
             title: `hi ${user.Name.split(" ")[0]}`,
             body: `Your operator wallet has been successfully topped up with ₹${verify.amount}`,
           });
-        } catch (error) {}
+        } catch (error) { }
       });
     }
     res.status(200).json(verify);
@@ -2693,11 +2679,10 @@ exports.acceptOffer = async (req, res) => {
           try {
             sendNotification(itm.fcm, {
               title: "New Booking",
-              body: `${user.Name.split(" ")[0]} has accepted your offer of ₹${
-                bid.Offer
-              }`,
+              body: `${user.Name.split(" ")[0]} has accepted your offer of ₹${bid.Offer
+                }`,
             });
-          } catch (eracceptOfferror) {}
+          } catch (eracceptOfferror) { }
         }
       });
       if (oup.Driver.DriverId != driver.DriverId) {
@@ -2711,11 +2696,11 @@ exports.acceptOffer = async (req, res) => {
                   "en-IN"
                 )}`,
               });
-            } catch (error) {}
+            } catch (error) { }
           }
         });
       }
-    } catch (error) {}
+    } catch (error) { }
   } catch (error) {
     res.status(error.status || 500).json({
       success: false,
@@ -3040,11 +3025,10 @@ exports.cancelBooking = async (req, res) => {
         try {
           sendNotification(itm.fcm, {
             title: "Booking cancelled",
-            body: `${user.Name.split(" ")[0]} has cancelled his ${
-              booking.TripType
-            } booking of ₹${booking.AcceptedBid.Offer}`,
+            body: `${user.Name.split(" ")[0]} has cancelled his ${booking.TripType
+              } booking of ₹${booking.AcceptedBid.Offer}`,
           });
-        } catch (error) {}
+        } catch (error) { }
       }
     });
   } catch (error) {
@@ -3181,16 +3165,12 @@ exports.genrateOtp = async (req, res) => {
     }
     let message =
       booking.Status == "confirmed"
-        ? `${
-            user.Name.split(" ")[0]
-          } is starting the trip. Please provide the OTP ${
-            booking.Billing.Otp.Start
-          } to the driver.`
-        : `${
-            user.Name.split(" ")[0]
-          } is ending the trip. Please provide the OTP ${
-            booking.Billing.Otp.End
-          } to the driver.`;
+        ? `${user.Name.split(" ")[0]
+        } is starting the trip. Please provide the OTP ${booking.Billing.Otp.Start
+        } to the driver.`
+        : `${user.Name.split(" ")[0]
+        } is ending the trip. Please provide the OTP ${booking.Billing.Otp.End
+        } to the driver.`;
     let client = await User.findOne({ UserId: booking.UserId }, { tokens: 1 });
     client.tokens.forEach((itm) => {
       if (itm.fcm && itm.expire > new Date().getTime()) {
@@ -3202,7 +3182,7 @@ exports.genrateOtp = async (req, res) => {
                 : "Driver ending the Trip",
             body: message,
           });
-        } catch (error) {}
+        } catch (error) { }
       }
     });
     return res
@@ -3272,7 +3252,7 @@ exports.startTrip = async (req, res) => {
               title: "Driver Started the Trip",
               body: message,
             });
-          } catch (error) {}
+          } catch (error) { }
         }
       });
       if (booking.AcceptedBid.OperatorId == user.Operator.OperatorId) {
@@ -3291,10 +3271,10 @@ exports.startTrip = async (req, res) => {
               title: "Driver Started the Trip",
               body: message,
             });
-          } catch (error) {}
+          } catch (error) { }
         }
       });
-    } catch (error) {}
+    } catch (error) { }
   } catch (error) {
     res.status(error.status || 500).json({
       success: false,
@@ -3360,7 +3340,7 @@ exports.endTrip = async (req, res) => {
               title: "Driver Ended the Trip",
               body: message,
             });
-          } catch (error) {}
+          } catch (error) { }
         }
       });
       if (booking.AcceptedBid.OperatorId == user.Operator.OperatorId) {
@@ -3379,10 +3359,10 @@ exports.endTrip = async (req, res) => {
               title: "Driver ended the Trip",
               body: message,
             });
-          } catch (error) {}
+          } catch (error) { }
         }
       });
-    } catch (error) {}
+    } catch (error) { }
   } catch (error) {
     res.status(error.status || 500).json({
       success: false,
@@ -3618,11 +3598,10 @@ exports.getScore = async (req, res) => {
     const message =
       bookings === 0
         ? "No bookings yet."
-        : `${completed} out of ${bookings} bookings were completed${
-            completed < bookings * 0.6
-              ? " - Consider the completion rate before bidding."
-              : ""
-          }`;
+        : `${completed} out of ${bookings} bookings were completed${completed < bookings * 0.6
+          ? " - Consider the completion rate before bidding."
+          : ""
+        }`;
 
     res.status(200).json({
       success: true,
@@ -3739,7 +3718,7 @@ exports.a_logout = async (req, res) => {
 
 exports.a_searchOperator = async (req, res) => {
   try {
-    let { City, PhoneNo, Status } = req.body;
+    let { City, PhoneNo, Status, OperatorId } = req.body;
     let filter = {};
     if (PhoneNo && !validator.isMobilePhone(PhoneNo, "en-IN")) {
       handleError("Please provide a valid PhoneNo", 400);
@@ -3753,18 +3732,21 @@ exports.a_searchOperator = async (req, res) => {
     if (City && (!City.description || !City.place_id)) {
       handleError("Please select a City from list", 400);
     }
+    if(OperatorId && !OperatorId.includes("Operator-")){
+      handleError("Please enter a valid operator id", 400);
+    }
     if (PhoneNo) {
       let user = await User.findOne({ PhoneNo: "+91" + PhoneNo });
       filter = user
         ? {
-            $or: [
-              { OperatorId: "Operator-" + user.UserId.split("-")[1] },
-              { EmergencyNumber: PhoneNo },
-            ],
-          }
+          $or: [
+            { OperatorId: "Operator-" + user.UserId.split("-")[1] },
+            { EmergencyNumber: PhoneNo },
+          ],
+        }
         : {
-            EmergencyNumber: PhoneNo,
-          };
+          EmergencyNumber: PhoneNo,
+        };
     }
     if (!PhoneNo && City) {
       let location = await getLatLong(City.description);
@@ -3778,6 +3760,9 @@ exports.a_searchOperator = async (req, res) => {
     }
     if (!PhoneNo && Status) {
       filter = { ...filter, Status };
+    }
+    if(OperatorId){
+      filter = {...filter, OperatorId}
     }
     let operators = await Operator.find(filter).limit(100);
     res.status(200).json({
@@ -3966,14 +3951,14 @@ exports.a_deleteOperator = async (req, res) => {
     let filePath = path.join(__dirname, `../files/operator/${OperatorId}`);
     try {
       await cleanupFiles(filePath);
-    } catch (error) {}
+    } catch (error) { }
     try {
       await Operator.deleteOne({ OperatorId });
       await User.updateOne(
         { UserId: "User-" + OperatorId.split("-")[1] },
         { Operator: {} }
       );
-    } catch (error) {}
+    } catch (error) { }
     return res.status(200).json({
       success: true,
       message: "Operator deleted successfully",
@@ -3990,7 +3975,7 @@ exports.a_deleteOperator = async (req, res) => {
 
 exports.a_SearchDrivers = async (req, res) => {
   try {
-    const { OperatorPhoneNo, PhoneNo, Status } = req.body;
+    const { OperatorPhoneNo, PhoneNo, Status, DriverId } = req.body;
     if (OperatorPhoneNo && !validator.isMobilePhone(OperatorPhoneNo, "en-IN")) {
       handleError("Please enter a valid Operator PhoneNo", 400);
     }
@@ -4004,6 +3989,9 @@ exports.a_SearchDrivers = async (req, res) => {
       )
     ) {
       handleError("Please enter a valid status", 400);
+    }
+    if(DriverId && !DriverId.includes("Driver-")){
+      handleError("Please enter a valid driver id", 400);
     }
     let filter = {};
     if (OperatorPhoneNo) {
@@ -4021,6 +4009,9 @@ exports.a_SearchDrivers = async (req, res) => {
     }
     if (Status) {
       filter.Status = Status;
+    }
+    if(DriverId){
+      filter.DriverId = DriverId;
     }
     let driver = await Driver.find(filter);
     res.status(200).json({ success: true, data: driver });
@@ -4178,7 +4169,7 @@ exports.a_deleteDriver = async (req, res) => {
     let filePath = path.join(__dirname, `../files/driver/${DriverId}`);
     try {
       await cleanupFiles(filePath);
-    } catch (error) {}
+    } catch (error) { }
     await Driver.deleteOne({ DriverId });
     return res.status(200).json({
       success: true,
@@ -4196,7 +4187,7 @@ exports.a_deleteDriver = async (req, res) => {
 
 exports.a_SearchCab = async (req, res) => {
   try {
-    const { OperatorPhoneNo, CabNumber, Status } = req.body;
+    const { OperatorPhoneNo, CabNumber, Status, CabId } = req.body;
     if (OperatorPhoneNo && !validator.isMobilePhone(OperatorPhoneNo, "en-IN")) {
       handleError("Please enter a valid Operator PhoneNo", 400);
     }
@@ -4205,6 +4196,9 @@ exports.a_SearchCab = async (req, res) => {
       !["pending", "verified", "suspended", "unlinked"].includes(Status)
     ) {
       handleError("Please enter a valid status", 400);
+    }
+    if(CabId && !CabId.includes("Cab-")){
+      handleError("Please enter a valid cab id", 400);
     }
     let filter = {};
     if (OperatorPhoneNo) {
@@ -4222,6 +4216,9 @@ exports.a_SearchCab = async (req, res) => {
     }
     if (Status) {
       filter.Status = Status;
+    }
+    if (CabId){
+      filter.CabId = CabId;
     }
     let cab = await Cab.find(filter);
     res.status(200).json({ success: true, data: cab });
@@ -4337,7 +4334,7 @@ exports.a_deleteCab = async (req, res) => {
     let filePath = path.join(__dirname, `../files/cab/${CabId}`);
     try {
       await cleanupFiles(filePath);
-    } catch (error) {}
+    } catch (error) { }
     await Cab.deleteOne({ CabId });
     return res.status(200).json({
       success: true,
@@ -4404,6 +4401,137 @@ exports.getUsermedia = async (req, res) => {
     res.status(error.status || 500).json({
       success: false,
       message: error.message || "Internal server error",
+    });
+  }
+};
+
+
+// === === === admin booking controller === === === //
+
+exports.a_getDuty = async (req, res) => {
+  try {
+    let { From, To, date, phoneNo, status } = req.body;
+
+    // If no query parameters are provided, return latest 100 duties
+    if (!From && !To && !date && !phoneNo && !status) {
+      const bookings = await Booking.find()
+        .sort({ Date: -1 }) // Sort by date in descending order
+        .limit(100); // Limit to 100 records
+
+      return res.status(200).json({
+        success: true,
+        data: bookings,
+      });
+    }
+
+    [From, To].forEach((itm) => {
+      if (itm) {
+        if (["description", "place_id"].some((subitm) => !itm[subitm])) {
+          let error = new Error("Invalid input");
+          error.status = 400;
+          throw error;
+        }
+      }
+    });
+    if (From) {
+      From = await getLatLong(From.description);
+    }
+    if (To) {
+      To = await getLatLong(To.description);
+    }
+
+    const fromLocation = From ? From.location : null;
+    const toLocation = To ? To.location : null;
+
+    const currentDate = new Date();
+
+    let locationQuery = {};
+    if (fromLocation || toLocation) {
+      locationQuery = {
+        $or: [
+          fromLocation && toLocation
+            ? {
+                $and: [
+                  {
+                    "From.location": {
+                      $geoWithin: {
+                        $centerSphere: [fromLocation.coordinates, 50 / 6371], // 50 km radius
+                      },
+                    },
+                  },
+                  {}
+                ],
+              }
+            : fromLocation
+            ? {
+                "From.location": {
+                  $geoWithin: {
+                    $centerSphere: [fromLocation.coordinates, 50 / 6371], // 50 km radius
+                  },
+                },
+              }
+            : {},
+        ],
+      };
+       if (fromLocation && toLocation) {
+          locationQuery.$or[0].$and[1] = {
+             "To.location": {
+                     $geoWithin: {
+                       $centerSphere: [toLocation.coordinates, 50 / 6371], // 50 km radius
+                     },
+                   },
+          };
+       } else if (toLocation) {
+          locationQuery.$or[0] = {
+             "To.location": {
+                     $geoWithin: {
+                       $centerSphere: [toLocation.coordinates, 50 / 6371], // 50 km radius
+                     },
+                   },
+          };
+       }
+    }
+
+    const dateQuery = date
+      ? {
+          Date: {
+            $gte: new Date(new Date(date).setHours(0, 0, 0, 0)),
+            $lte: new Date(new Date(date).setHours(23, 59, 59, 999)),
+          },
+        }
+      : {};
+
+    const query = {
+      ...dateQuery,
+      ...locationQuery,
+    };
+
+    // Add PhoneNo filter if provided
+    if (phoneNo) {
+        query.PhoneNo = "+91" + phoneNo;
+    }
+    console.log(query);
+    // Add Status filter if provided and not 'All'
+    if (status && status !== "") {
+        query.Status = status;
+    } else {
+      // If no status is provided, exclude 'unlinked' status
+        query.Status = { $ne: "unlinked" };
+    }
+
+
+    const bookings = await Booking.find(query)
+      .sort({ Date: -1 }) // Sort by date in descending order
+      .limit(100); // Limit to 100 records
+
+    res.status(200).json({
+      success: true,
+      data: bookings,
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
     });
   }
 };
