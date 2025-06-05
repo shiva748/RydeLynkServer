@@ -1,6 +1,7 @@
 const express = require("express");
 const Router = express.Router();
-const path = require("path")
+const path = require("path");
+const fs = require("fs");
 const {
   citysearch,
   a_Login,
@@ -29,8 +30,6 @@ const {
 } = require("../Controller/controller");
 const verifyToken = require("../Middleware/adminauth");
 // === === === login === === === //
-
-Router.use(express.static(path.join(__dirname, "../../rydelynk/build")))
 
 Router.post("/login", a_Login);
 
@@ -79,5 +78,15 @@ Router.post("/user/search", verifyToken, a_SearchUser);
 Router.get("/user/media/:UserId/:File", verifyToken, getUsermedia);
 
 Router.post("/booking/search", verifyToken, a_getDuty);
+
+Router.use(express.static(path.join(__dirname, "../../ad/build")));
+
+Router.get("/*", (req, res) => {
+  let filePath = path.join(__dirname, `../../ad/build/index.html`);
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(__dirname, `./landing/404.html`);
+  }
+  return res.status(200).sendFile(filePath);
+});
 
 module.exports = Router;

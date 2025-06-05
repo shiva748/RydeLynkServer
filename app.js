@@ -67,8 +67,8 @@ mainApp.get("/booking/:BookingId", (req, res) => {
 mainApp.use("/api", Routes);
 
 // Use vhost to handle subdomains
-app.use(vhost('admin.localhost', adminApp));
-app.use(vhost('localhost', mainApp));
+app.use(vhost(process.env.ADMINDOMAIN, adminApp));
+app.use(vhost(process.env.DOMAIN, mainApp));
 
 const server = createServer(app);
 
